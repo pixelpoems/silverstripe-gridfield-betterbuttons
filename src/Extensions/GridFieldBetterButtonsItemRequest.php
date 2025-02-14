@@ -108,7 +108,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      */
     public function updateItemEditForm($form)
     {
-        if ($this->owner->record->stat('better_buttons_enabled') !== true) {
+        if (Config::inst()->get(get_class($this->owner->record), 'better_buttons_enabled') !== true) {
             return false;
         }
         Requirements::css(BETTER_BUTTONS_DIR.'/css/gridfield_betterbuttons.css');
