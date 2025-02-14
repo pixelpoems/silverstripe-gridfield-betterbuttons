@@ -73,11 +73,11 @@ class BetterButtonAction extends LiteralField implements BetterButtonInterface
      * Get the name of the button. Arbitrary.
      * @return string
      */
-    public function getButtonName()
+     public function getButtonName()
     {
-        $raw = $this->buttonName ?: $this->getButtonText();
+        $raw = $this->buttonName ?: $this->getButtonText() ?: '';
 
-        return preg_replace('/[^a-z0-9-_]/', '', strtolower($this->getButtonText()));
+        return preg_replace('/[^a-z0-9-_]/', '', strtolower($raw));
     }
 
     /**
