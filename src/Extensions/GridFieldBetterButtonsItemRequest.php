@@ -25,6 +25,7 @@ use UncleCheese\BetterButtons\Controllers\BetterButtonsCustomActionRequest;
 use UncleCheese\BetterButtons\Controllers\BetterButtonsNestedFormRequest;
 use UncleCheese\BetterButtons\Interfaces\BetterButtonInterface;
 use UncleCheese\BetterButtons\Interfaces\BetterButton_Versioned;
+use SilverStripe\Core\Config\Config;
 
 /**
  * Decorates {@link GridDetailForm_ItemRequest} to use new form actions and buttons.
