@@ -1,26 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Tests\Actions;
 
 use SilverStripe\Dev\SapphireTest;
 use UncleCheese\BetterButtons\Actions\BetterButtonCustomAction;
 
-class BetterButtonCustomActionTest extends SapphireTest
+final class BetterButtonCustomActionTest extends SapphireTest
 {
-    /**
-     * @var BetterButtonCustomAction
-     */
-    private $button;
+    private BetterButtonCustomAction $button;
 
     /**
      * Instantiate the test button
      *
      * {@inheritDoc}
      */
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
-        $this->button = new BetterButtonCustomAction('foo', 'bar');
+        $this->button = BetterButtonCustomAction::create('foo', 'bar');
     }
 
     /**
@@ -30,7 +29,7 @@ class BetterButtonCustomActionTest extends SapphireTest
      * @expectedExceptionMessage Redirect type must use either the GOBACK or REFRESH constants
      * on BetterButtonCustomAction
      */
-    public function testSetRedirectThrowsExceptionOnInvalidType()
+    public function testSetRedirectThrowsExceptionOnInvalidType(): void
     {
         $this->button->setRedirectType(12345);
     }
@@ -38,7 +37,7 @@ class BetterButtonCustomActionTest extends SapphireTest
     /**
      * Test that a valid redirect type can be set and retrieved
      */
-    public function testSetAndGetRedirectType()
+    public function testSetAndGetRedirectType(): void
     {
         $this->button->setRedirectType(BetterButtonCustomAction::REFRESH);
         $this->assertSame(BetterButtonCustomAction::REFRESH, $this->button->getRedirectType());
@@ -47,7 +46,7 @@ class BetterButtonCustomActionTest extends SapphireTest
     /**
      * Test that the redirect URL can be set and retrieved
      */
-    public function testSetAndGetRedirectUrl()
+    public function testSetAndGetRedirectUrl(): void
     {
         $this->button->setRedirectURL('leftandmain.com');
         $this->assertSame('leftandmain.com', $this->button->getRedirectURL());

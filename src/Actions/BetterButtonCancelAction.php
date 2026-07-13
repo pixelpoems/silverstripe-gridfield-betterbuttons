@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Actions;
 
 use UncleCheese\BetterButtons\Actions\BetterButtonAction;
@@ -31,9 +33,8 @@ class BetterButtonCancelAction extends BetterButtonAction
 
     /**
      * Gets the HTML that represents the button
-     * @return string
      */
-    public function getButtonHTML()
+    public function getButtonHTML(): string
     {
         $this->addExtraClass("btn btn-default backlink");
 

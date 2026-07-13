@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Actions;
 
 use SilverStripe\Control\Controller;
@@ -15,10 +17,9 @@ use UncleCheese\BetterButtons\Actions\BetterButtonAction;
 class BetterButtonPrevNextAction extends BetterButtonAction
 {
     /**
-     * Gets the HTML for the button
-     * @return string
-     */
-  public function getButtonHTML()
+   * Gets the HTML for the button
+   */
+  public function getButtonHTML(): string
     {
         $html = '<div class="btn-group" role="group">';
 
@@ -62,8 +63,6 @@ class BetterButtonPrevNextAction extends BetterButtonAction
             $linkText
         );
 
-        $html .= '</div>';
-
-        return $html;
+        return $html . '</div>';
     }
 }

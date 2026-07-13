@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Actions;
 
 use SilverStripe\Core\Convert;
@@ -15,10 +17,11 @@ use UncleCheese\BetterButtons\Interfaces\BetterButtonInterface;
  *
  * @author  Uncle Cheese <unclecheese@leftandmain.com>
  * @package  silverstripe-gridfield-betterbuttons
+ * @see \UncleCheese\BetterButtons\Tests\Actions\BetterButtonActionTest
  */
 class BetterButtonAction extends LiteralField implements BetterButtonInterface
 {
-    private static $extensions = array(
+    private static array $extensions = array(
         BetterButtonGroupable::class
     );
 
@@ -58,10 +61,8 @@ class BetterButtonAction extends LiteralField implements BetterButtonInterface
 
     /**
      * Bind the button to the GridField request
-     * @param Form $form
-     * @param GridFieldDetailForm_ItemRequest $request
      */
-    public function bindGridField(Form $form, GridFieldDetailForm_ItemRequest $request)
+    public function bindGridField(Form $form, GridFieldDetailForm_ItemRequest $request): static
     {
         $this->setForm($form);
         $this->gridFieldRequest = $request;
@@ -73,7 +74,7 @@ class BetterButtonAction extends LiteralField implements BetterButtonInterface
      * Get the name of the button. Arbitrary.
      * @return string
      */
-     public function getButtonName()
+     public function getButtonName(): ?string
     {
         $raw = $this->buttonName ?: $this->getButtonText() ?: '';
 
@@ -90,18 +91,16 @@ class BetterButtonAction extends LiteralField implements BetterButtonInterface
 
     /**
      * Determines if the button should display
-     * @return bool
      */
-    public function shouldDisplay()
+    public function shouldDisplay(): bool
     {
         return true;
     }
 
     /**
      * Gets the HTML representing the button
-     * @return string
      */
-    public function getButtonHTML()
+    public function getButtonHTML(): string
     {
         return sprintf(
             '<a class="%s" href="%s" %s>%s</a>',
@@ -124,6 +123,7 @@ class BetterButtonAction extends LiteralField implements BetterButtonInterface
         if ($this->isGrouped()) {
             return $classes; //Do not return the below additional classes
         }
+
         $classes .= ' btn btn-default ss-ui-button';
         if ($this->getAttribute('target') != '_blank') {
             // Only add this class if this link is targeted inside the CMS. Any links targeted to a new browser

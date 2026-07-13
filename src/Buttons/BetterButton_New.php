@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Buttons;
 
 use UncleCheese\BetterButtons\Buttons\BetterButton;
@@ -43,6 +45,7 @@ class BetterButton_New extends BetterButton
         if ($this->gridFieldRequest->getRequest()->param('ID') == 'new') {
             return false;
         }
+
         return $this->gridFieldRequest->record->canCreate();
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Buttons;
 
 use UncleCheese\BetterButtons\Buttons\BetterButton;
@@ -34,9 +36,8 @@ class BetterButton_Unpublish extends BetterButton implements BetterButton_Versio
 
     /**
      * Determines if the button should show
-     * @return boolean
      */
-    public function shouldDisplay()
+    public function shouldDisplay(): bool
     {
         return $this->gridFieldRequest->recordIsPublished() && $this->gridFieldRequest->record->canEdit();
     }

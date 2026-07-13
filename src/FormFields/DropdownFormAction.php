@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\FormFields;
 
 use Exception;
@@ -21,7 +23,7 @@ use UncleCheese\BetterButtons\Interfaces\BetterButtonInterface;
  */
 class DropdownFormAction extends CompositeField implements BetterButtonInterface
 {
-    private static $extensions = array(
+    private static array $extensions = array(
         BetterButtonGroupable::class
     );
 
@@ -50,8 +52,9 @@ class DropdownFormAction extends CompositeField implements BetterButtonInterface
                 $c->setUseButtonTag(true);
             }
         }
+
         parent::__construct($children);
-        self::$instance_count++;
+        ++self::$instance_count;
         $this->identifier = self::$instance_count;
     }
 
@@ -70,19 +73,16 @@ class DropdownFormAction extends CompositeField implements BetterButtonInterface
 
     /**
      * A unique id for the dropdown button
-     *
-     * @return  string
      */
-    public function DropdownID()
+    public function DropdownID(): string
     {
         return 'form-action-dropdown-' . $this->identifier;
     }
 
     /**
      * Determines if the button should displsy
-     * @return boolean
      */
-    public function shouldDisplay()
+    public function shouldDisplay(): bool
     {
         foreach ($this->children as $child) {
             if ($child->shouldDisplay()) {
@@ -95,12 +95,9 @@ class DropdownFormAction extends CompositeField implements BetterButtonInterface
 
     /**
      * Binds to the GridField request, and transforms the buttons
-     * @param Form $form
-     * @param GridFieldDetailForm_ItemRequest $request
-     * @return $this
      * @throws Exception if instances of BetterButton are not passed
      */
-    public function bindGridField(Form $form, GridFieldDetailForm_ItemRequest $request)
+    public function bindGridField(Form $form, GridFieldDetailForm_ItemRequest $request): static
     {
         $this->setForm($form);
         $this->gridFieldRequest = $request;

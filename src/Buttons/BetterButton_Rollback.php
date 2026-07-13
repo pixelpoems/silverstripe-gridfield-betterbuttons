@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Buttons;
 
 use UncleCheese\BetterButtons\Buttons\BetterButton;
@@ -37,9 +39,8 @@ class BetterButton_Rollback extends BetterButton implements BetterButton_Version
 
     /**
      * Determines if the button should display
-     * @return boolean
      */
-    public function shouldDisplay()
+    public function shouldDisplay(): bool
     {
         return $this->gridFieldRequest->record->stagesDiffer('Stage', 'Live')
             && $this->gridFieldRequest->recordIsPublished()

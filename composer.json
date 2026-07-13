@@ -1,7 +1,7 @@
 {
     "name": "unclecheese/betterbuttons",
     "description": "Adds new form actions and buttons to GridField detail form for usability enhancements.",
-    "type": "silverstripe-module",
+    "type": "silverstripe-vendormodule",
     "keywords": ["silverstripe", "gridfield", "buttons"],
     "license": "GNU",
     "authors": [
@@ -11,12 +11,14 @@
         }
     ],
     "require": {
-        "silverstripe/framework": "^5.2"
+        "silverstripe/framework": "^6.1"
     },
     "extra": {
-        "branch-alias": {
-            "dev-master": "2.x-dev"
-        }
+        "expose": [
+            "css",
+            "javascript",
+            "images"
+        ]
     },
     "autoload": {
         "psr-4": {

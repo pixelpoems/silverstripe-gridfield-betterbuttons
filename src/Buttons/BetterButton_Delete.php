@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Buttons;
 
 use SilverStripe\View\Requirements;
@@ -34,14 +36,13 @@ class BetterButton_Delete extends BetterButton
             ->setUseButtonTag(true)
             ->addExtraClass('btn-danger-outline btn-hide-outline font-icon-trash-bin gridfield-better-buttons-delete')
             ->setAttribute("data-toggletext", _t('GridFieldBetterButtons.AREYOUSURE', 'Yes. Delete this item.'))
-            ->setAttribute("data-confirmtext", _t('GridFieldDetailForm.CANCELDELETE', 'No. Don\'t delete.'));
+            ->setAttribute("data-confirmtext", _t('GridFieldDetailForm.CANCELDELETE', "No. Don't delete."));
     }
 
     /**
      * Determines if the button should show
-     * @return boolean
      */
-    public function shouldDisplay()
+    public function shouldDisplay(): bool
     {
         return !$this->gridFieldRequest->recordIsPublished() && $this->gridFieldRequest->record->canDelete();
     }

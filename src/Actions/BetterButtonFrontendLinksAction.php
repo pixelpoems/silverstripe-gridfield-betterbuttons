@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Actions;
 
 use SilverStripe\Control\Controller;
@@ -25,18 +27,16 @@ class BetterButtonFrontendLinksAction extends BetterButtonAction
 
     /**
      * Determines if the button should display
-     * @return bool
      */
-    public function shouldDisplay()
+    public function shouldDisplay(): bool
     {
         return $this->gridFieldRequest->record && $this->gridFieldRequest->record->hasMethod('Link');
     }
 
     /**
      * Generates the HTML that represents the button
-     * @return string
      */
-    public function getButtonHTML()
+    public function getButtonHTML(): string
     {
         $link = $this->getButtonLink();
 

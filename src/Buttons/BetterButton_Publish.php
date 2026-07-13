@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Buttons;
 
 use UncleCheese\BetterButtons\Buttons\BetterButton;
@@ -47,9 +49,8 @@ class BetterButton_Publish extends BetterButton implements BetterButton_Versione
 
     /**
      * Update the UI to reflect published state
-     * @return void
      */
-    public function transformToButton()
+    public function transformToButton(): static
     {
         parent::transformToButton();
 

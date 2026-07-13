@@ -1,29 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Tests\Actions;
 
 use SilverStripe\Dev\SapphireTest;
 use UncleCheese\BetterButtons\Actions\BetterButtonAction;
 
-class BetterButtonActionTest extends SapphireTest
+final class BetterButtonActionTest extends SapphireTest
 {
     /**
      * Test that the button name (or button text) is sanitized and returned as lowercase
      *
      * @dataProvider buttonNameProvider
-     * @param string $buttonName
-     * @param string $expected
      */
-    public function testGetButtonName($buttonName, $expected)
+    public function testGetButtonName(string $buttonName, string $expected): void
     {
-        $field = new BetterButtonAction($buttonName);
+        $field = BetterButtonAction::create($buttonName);
         $this->assertSame($expected, $field->getButtonName());
     }
 
     /**
      * @return array[]
      */
-    public function buttonNameProvider()
+    public function buttonNameProvider(): array
     {
         return [
             [

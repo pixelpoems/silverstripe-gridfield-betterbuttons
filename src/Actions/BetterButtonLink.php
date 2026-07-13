@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Actions;
 
 use UncleCheese\BetterButtons\Actions\BetterButtonAction;
@@ -44,7 +46,7 @@ class BetterButtonLink extends BetterButtonAction
      *
      * @param bool $enable True if omitted
      */
-    public function newWindow($enable = true)
+    public function newWindow($enable = true): void
     {
         $this->setAttribute('target', $enable ? '_blank' : '');
     }

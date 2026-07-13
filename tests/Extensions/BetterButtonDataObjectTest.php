@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Tests\Actions;
 
 use SilverStripe\Core\Config\Config;
@@ -9,7 +11,7 @@ use UncleCheese\BetterButtons\Buttons\BetterButton_SaveAndClose;
 use UncleCheese\BetterButtons\Interfaces\BetterButtonInterface;
 use UncleCheese\BetterButtons\Tests\Extensions\Stubs\ButtonDataObject;
 
-class BetterButtonDataObjectTest extends SapphireTest
+final class BetterButtonDataObjectTest extends SapphireTest
 {
     protected $usesDatabase = true;
 
@@ -22,7 +24,7 @@ class BetterButtonDataObjectTest extends SapphireTest
      *
      * {@inheritDoc}
      */
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         Config::nest();
@@ -32,7 +34,7 @@ class BetterButtonDataObjectTest extends SapphireTest
      * Test that the getBetterButtonsActions method returns a FieldList containing the configured actions for
      * the DataObject
      */
-    public function testGetBetterButtonActions()
+    public function testGetBetterButtonActions(): void
     {
         Config::inst()->update('BetterButtonsActions', 'create', [
             'BetterButton_SaveAndClose' => true
@@ -42,7 +44,7 @@ class BetterButtonDataObjectTest extends SapphireTest
             'BetterButton_Delete' => false
         ]);
 
-        $object = new ButtonDataObject;
+        $object = ButtonDataObject::create();
         $result = $object->getBetterButtonsActions();
 
         $this->assertInstanceOf(FieldList::class, $result);
@@ -55,9 +57,9 @@ class BetterButtonDataObjectTest extends SapphireTest
      * Test that all fields in the button FieldList are instances of BetterButtonInterface. Uses the default
      * configuration from _config/config.yml
      */
-    public function testAllButtonsImplementInterface()
+    public function testAllButtonsImplementInterface(): void
     {
-        $object = new ButtonDataObject;
+        $object = ButtonDataObject::create();
         $fields = $object->getBetterButtonsActions();
         $this->assertContainsOnlyInstancesOf(BetterButtonInterface::class, $fields);
     }
@@ -69,23 +71,23 @@ class BetterButtonDataObjectTest extends SapphireTest
      * @expectedException Exception
      * @expectedExceptionMessage The button type DonkeyLlamaChild doesn't exist.
      */
-    public function testInstantiateButtonThrowsExceptionOnInvalidButtonClass()
+    public function testInstantiateButtonThrowsExceptionOnInvalidButtonClass(): void
     {
         Config::inst()->update('BetterButtonsActions', 'create', [
             'MicroHamsterPidgeon' => false, // Will pass, since it's not enabled
             'DonkeyLlamaChild' => true
         ]);
 
-        $object = new ButtonDataObject;
+        $object = ButtonDataObject::create();
         $object->getBetterButtonsActions();
     }
 
     /**
      * ButtonDataObject is not versioned, so test that checkVersioned reports that too
      */
-    public function testButtonDataObjectIsNotVersioned()
+    public function testButtonDataObjectIsNotVersioned(): void
     {
-        $this->assertFalse((new ButtonDataObject)->checkVersioned());
+        $this->assertFalse((ButtonDataObject::create())->checkVersioned());
     }
 
     /**
@@ -93,7 +95,7 @@ class BetterButtonDataObjectTest extends SapphireTest
      *
      * {@inheritDoc}
      */
-    public function tearDown()
+    protected function tearDown(): void
     {
         Config::unnest();
         parent::tearDown();

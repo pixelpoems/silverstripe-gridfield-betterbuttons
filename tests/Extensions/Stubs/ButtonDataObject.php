@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Tests\Extensions\Stubs;
 
 use SilverStripe\Dev\TestOnly;
@@ -11,9 +13,9 @@ use UncleCheese\BetterButtons\Extensions\BetterButtonDataObject;
  */
 class ButtonDataObject extends DataObject implements TestOnly
 {
-    private static $table_name = 'TestButtonDataObject';
+    private static string $table_name = 'TestButtonDataObject';
 
-    private static $extensions = [
+    private static array $extensions = [
         BetterButtonDataObject::class
     ];
 }

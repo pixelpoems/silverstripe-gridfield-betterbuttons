@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Controllers;
 
 use SilverStripe\Control\Controller;
@@ -19,17 +21,11 @@ use UncleCheese\BetterButtons\Actions\BetterButtonCustomAction;
  */
 class BetterButtonsCustomActionRequest extends RequestHandler
 {
-    /**
-     * @var array
-     */
-    private static $url_handlers = array(
+    private static array $url_handlers = array(
         '$Action!' => 'handleCustomAction'
     );
 
-    /**
-     * @var array
-     */
-    private static $allowed_actions = array(
+    private static array $allowed_actions = array(
         'handleCustomAction'
     );
 
@@ -77,7 +73,6 @@ class BetterButtonsCustomActionRequest extends RequestHandler
      * Takes the action at /customaction/my-action-name and feeds it to the DataObject.
      * Checks to see if the method is allowed to be invoked first.
      *
-     * @param  HTTPRequest $r
      * @return HTTPResponse
      */
     public function handleCustomAction(HTTPRequest $r)
@@ -89,7 +84,7 @@ class BetterButtonsCustomActionRequest extends RequestHandler
 
         $formAction = $this->record->findActionByName($action);
         if (!$formAction) {
-            return $this->httpError(403, "Action $action doesn't exist");
+            return $this->httpError(403, sprintf("Action %s doesn't exist", $action));
         }
 
         $message = $this->record->$action($formAction, $this->controller, $r);

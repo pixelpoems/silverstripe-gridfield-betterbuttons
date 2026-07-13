@@ -1,13 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Extensions;
 
+use SilverStripe\Core\Extension;
 use Exception;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\CompositeField;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\ORM\DataExtension;
 use SilverStripe\Versioned\Versioned;
 use UncleCheese\BetterButtons\Buttons\BetterButton;
 use UncleCheese\BetterButtons\FormFields\DropdownFormAction;
@@ -22,15 +24,16 @@ use UncleCheese\BetterButtons\FormFields\DropdownFormAction;
  * @author  Uncle Cheese <unclecheese@leftandmain.com>
  * @package  silverstripe-gridfield-betterbuttons
  */
-class BetterButtonDataObject extends DataExtension
+class BetterButtonDataObject extends Extension
 {
+    public $owner;
+
     /**
      * Enable better buttons for this DataObject
      *
      * @config
-     * @var bool
      */
-    private static $better_buttons_enabled = true;
+    private static bool $better_buttons_enabled = true;
 
     /**
      * Enable versioned controls like 'Save & Publish' for DataObjects
@@ -40,9 +43,8 @@ class BetterButtonDataObject extends DataExtension
      * published/unpublished state of its children. ie. User Defined Forms 3.0+.
      *
      * @config
-     * @var bool
      */
-    private static $better_buttons_versioned_enabled = true;
+    private static bool $better_buttons_versioned_enabled = true;
 
     /**
      * Gets the default actions for all DataObjects. Can be overloaded in subclasses
@@ -63,7 +65,7 @@ class BetterButtonDataObject extends DataExtension
         $buttons = $this->getDefaultButtonList("BetterButtonsActions");
         $actions = $this->createFieldList($buttons);
 
-        $this->owner->extend('updateBetterButtonsActions', $actions);
+        $this->getOwner()->extend('updateBetterButtonsActions', $actions);
 
         return $actions;
     }
@@ -75,7 +77,7 @@ class BetterButtonDataObject extends DataExtension
      */
     public function findActionByName($action)
     {
-        $actions = $this->owner->getBetterButtonsActions();
+        $actions = $this->getOwner()->getBetterButtonsActions();
         $formAction = false;
 
         foreach ($actions as $f) {
@@ -91,7 +93,7 @@ class BetterButtonDataObject extends DataExtension
         }
 
         if (!$formAction) {
-            $utils = $this->owner->getBetterButtonsUtils();
+            $utils = $this->getOwner()->getBetterButtonsUtils();
             $formAction = $utils->fieldByName($action);
         }
 
@@ -118,7 +120,7 @@ class BetterButtonDataObject extends DataExtension
         $buttons = $this->getDefaultButtonList("BetterButtonsUtils");
         $utils = $this->createFieldList($buttons);
 
-        $this->owner->extend('updateBetterButtonsUtils', $utils);
+        $this->getOwner()->extend('updateBetterButtonsUtils', $utils);
 
         return $utils;
     }
@@ -130,7 +132,7 @@ class BetterButtonDataObject extends DataExtension
      */
     protected function getDefaultButtonList($config)
     {
-        $new = ($this->owner->ID == 0);
+        $new = ($this->getOwner()->ID == 0);
         $list = $new
             ? Config::inst()->get($config, $this->checkVersioned() ? "versioned_create" : "create")
             : Config::inst()->get($config, $this->checkVersioned() ? "versioned_edit" : "edit");
@@ -147,11 +149,15 @@ class BetterButtonDataObject extends DataExtension
     {
         $actions = FieldList::create();
         foreach ($buttons as $buttonType => $bool) {
-            if (!$bool || !$buttonType) {
+            if (!$bool) {
                 continue;
             }
 
-            if (substr($buttonType, 0, 6) == "Group_") {
+            if (!$buttonType) {
+                continue;
+            }
+
+            if (substr($buttonType, 0, 6) === "Group_") {
                 $group = $this->createButtonGroup(substr($buttonType, 6));
                 if ($group->children->exists()) {
                     $actions->push($group);
@@ -173,13 +179,13 @@ class BetterButtonDataObject extends DataExtension
      * @return BetterButton
      * @throws Exception If the requested button type does not exist
      */
-    protected function instantiateButton($className)
+    protected function instantiateButton(string $className)
     {
         try {
             return Injector::inst()->create($className);
-        } catch (Exception $ex) {
+        } catch (Exception $exception) {
             // Customize the default injector exception
-            throw new Exception("The button type $className doesn't exist.");
+            throw new Exception(sprintf("The button type %s doesn't exist.", $className), $exception->getCode(), $exception);
         }
     }
 
@@ -195,11 +201,15 @@ class BetterButtonDataObject extends DataExtension
         $buttons = (isset($groupConfig['buttons'])) ? $groupConfig['buttons'] : array ();
         $button = DropdownFormAction::create(_t('GridFieldBetterButtons.'.$groupName, $label));
         foreach ($buttons as $b => $bool) {
-            if ($bool) {
-                if ($child = $this->instantiateButton($b)) {
-                    $button->push($child);
-                }
+            if (!$bool) {
+                continue;
             }
+
+            if (!$child = $this->instantiateButton($b)) {
+                continue;
+            }
+
+            $button->push($child);
         }
 
         return $button;
@@ -207,13 +217,12 @@ class BetterButtonDataObject extends DataExtension
 
     /**
      * Determines if the record is using the {@link Versioned} extension
-     * @return boolean
      */
-    public function checkVersioned()
+    public function checkVersioned(): bool
     {
         $isVersioned = false;
 
-        foreach ($this->owner->getExtensionInstances() as $extension) {
+        foreach ($this->getOwner()->getExtensionInstances() as $extension) {
             if ($extension instanceof Versioned) {
                 $isVersioned = true;
                 break;
@@ -221,8 +230,8 @@ class BetterButtonDataObject extends DataExtension
         }
 
         return $isVersioned
-            && $this->owner->config()->better_buttons_versioned_enabled
-            && count($this->owner->getVersionedStages()) > 1;
+            && $this->getOwner()->config()->better_buttons_versioned_enabled
+            && count($this->getOwner()->getVersionedStages()) > 1;
     }
 
     /**
@@ -239,7 +248,7 @@ class BetterButtonDataObject extends DataExtension
      */
     public function isCustomActionAllowed($action)
     {
-        $actions = $this->owner->config()->better_buttons_actions;
+        $actions = $this->getOwner()->config()->better_buttons_actions;
         if ($actions) {
             return in_array($action, $actions);
         }

@@ -1,7 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Extensions;
 
+use SilverStripe\Core\Extension;
+use SilverStripe\Core\Validation\ValidationException;
+use SilverStripe\Control\HTTPResponse;
 use Exception;
 use SilverStripe\Admin\LeftAndMain;
 use SilverStripe\Control\Controller;
@@ -12,13 +17,10 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest;
 use SilverStripe\Forms\TabSet;
-use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataList;
-use SilverStripe\ORM\DataModel;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\ManyManyList;
-use SilverStripe\ORM\ValidationException;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Requirements;
 use UncleCheese\BetterButtons\Controllers\BetterButtonsCustomActionRequest;
@@ -33,12 +35,14 @@ use SilverStripe\Core\Config\Config;
  * @author  Uncle Cheese <unclecheese@leftandmain.com>
  * @package  silverstripe-gridfield-betterbuttons
  */
-class GridFieldBetterButtonsItemRequest extends DataExtension
+class GridFieldBetterButtonsItemRequest extends Extension
 {
+    public $owner;
+
     /**
      * @var array Allowed controller actions
      */
-    private static $allowed_actions = array(
+    private static array $allowed_actions = array(
         'addnew',
         'edit',
         'save',
@@ -66,28 +70,26 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      * Can't handle the actions here because the url_param '$Action!' gets matched, and we don't
      * get to read anything after /customaction/
      *
-     * @param  HTTPRequest $r
      * @return BetterButtonsCustomActionRequest
      */
     public function customaction(HTTPRequest $r)
     {
-        $req = new BetterButtonsCustomActionRequest($this, $this->owner, $this->owner->ItemEditForm());
+        $req = BetterButtonsCustomActionRequest::create($this, $this->getOwner(), $this->getOwner()->ItemEditForm());
 
-        return $req->handleRequest($r, DataModel::inst());
+        return $req->handleRequest($r);
     }
 
     /**
      * Handles all custom action from DataObjects and hands them off to a sub-controller.
      * e.g. /nestedform?action=myDataObjectAction
      *
-     * @param  HTTPRequest $r
      * @return BetterButtonsNestedFormRequest
      */
     public function nestedform(HTTPRequest $r)
     {
-        $req = new BetterButtonsNestedFormRequest($this, $this->owner, $this->owner->ItemEditForm());
+        $req = BetterButtonsNestedFormRequest::create($this, $this->getOwner(), $this->getOwner()->ItemEditForm());
 
-        return $req->handleRequest($r, DataModel::inst());
+        return $req->handleRequest($r);
     }
 
     /**
@@ -99,7 +101,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      */
     public function addnew(HTTPRequest $r)
     {
-        return Controller::curr()->redirect(Controller::join_links($this->owner->gridField->Link("item"), "new"));
+        return Controller::curr()->redirect(Controller::join_links($this->getOwner()->gridField->Link("item"), "new"));
     }
 
     /**
@@ -107,16 +109,17 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      *
      * @param Form The ItemEditForm object
      */
-    public function updateItemEditForm($form)
+    public function updateItemEditForm($form): ?bool
     {
-        if (Config::inst()->get(get_class($this->owner->record), 'better_buttons_enabled') !== true) {
+        if (Config::inst()->get(get_class($this->getOwner()->record), 'better_buttons_enabled') !== true) {
             return false;
         }
+
         Requirements::css(BETTER_BUTTONS_DIR.'/css/gridfield_betterbuttons.css');
         Requirements::javascript(BETTER_BUTTONS_DIR.'/javascript/gridfield_betterbuttons.js');
 
 
-        $actions = $this->owner->record->getBetterButtonsActions();
+        $actions = $this->getOwner()->record->getBetterButtonsActions();
         $form->setActions($this->filterFieldList($form, $actions));
 
         if ($form->Fields()->hasTabSet()) {
@@ -124,19 +127,18 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
             $form->addExtraClass('cms-tabset');
         }
 
-        $utils = $this->owner->record->getBetterButtonsUtils();
+        $utils = $this->getOwner()->record->getBetterButtonsUtils();
         $form->Utils = $this->filterFieldList($form, $utils);
         $form->setTemplate([
             'type' => 'Includes',
             'BetterButtons_EditForm',
         ]);
         $form->addExtraClass('better-buttons-form');
+        return null;
     }
 
     /**
      * Given a list of actions, remove anything that doesn't belong.
-     * @param  Form      $form
-     * @param  FieldList $actions
      * @return FieldList
      */
     protected function filterFieldList(Form $form, FieldList $actions)
@@ -145,16 +147,16 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
 
         foreach ($actions as $a) {
             if (!$a instanceof BetterButtonInterface) {
-                throw new Exception("{$buttonObj->class} must implement BetterButtonInterface");
+                throw new Exception($buttonObj->class . ' must implement BetterButtonInterface');
             }
 
-            $a->bindGridField($form, $this->owner);
+            $a->bindGridField($form, $this->getOwner());
 
             if (!$a->shouldDisplay()) {
                 continue;
             }
 
-            if (($a instanceof BetterButton_Versioned) && !$this->owner->record->checkVersioned()) {
+            if (($a instanceof BetterButton_Versioned) && !$this->getOwner()->record->checkVersioned()) {
                 continue;
             }
 
@@ -170,9 +172,9 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      * @param array The form data
      * @param Form The form object
      */
-    public function doSaveAndAdd($data, $form)
+    public function doSaveAndAdd(array $data, $form)
     {
-        return $this->saveAndRedirect($data, $form, $this->owner->Link("addnew"));
+        return $this->saveAndRedirect($data, $form, $this->getOwner()->Link("addnew"));
     }
 
     /**
@@ -182,7 +184,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      * @param array The form data
      * @param Form The form object
      */
-    public function doSaveAndQuit($data, $form)
+    public function doSaveAndQuit(array $data, $form)
     {
         Controller::curr()->getResponse()->addHeader("X-Pjax", "Content");
         return $this->saveAndRedirect($data, $form, $this->getBackLink());
@@ -194,9 +196,9 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      * @param  Form $form The Form object
      * @return HTTPResponse
      */
-    public function doPublishAndAdd($data, $form)
+    public function doPublishAndAdd(array $data, $form)
     {
-        return $this->publish($data, $form, $this->owner, $this->owner->Link('addnew'));
+        return $this->publish($data, $form, $this->getOwner(), $this->getOwner()->Link('addnew'));
     }
 
     /**
@@ -205,10 +207,10 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      * @param  Form $form The Form object
      * @return HTTPResponse
      */
-    public function doPublishAndClose($data, $form)
+    public function doPublishAndClose(array $data, $form)
     {
         Controller::curr()->getResponse()->addHeader("X-Pjax", "Content");
-        return $this->publish($data, $form, $this->owner, $this->getBackLink());
+        return $this->publish($data, $form, $this->getOwner(), $this->getBackLink());
     }
 
     /**
@@ -229,7 +231,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      * @param  Form $form The Form object
      * @return HTTPResponse
      */
-    public function doSaveAndNext($data, $form)
+    public function doSaveAndNext(array $data, $form)
     {
         Controller::curr()->getResponse()->addHeader("X-Pjax", "Content");
         $link = $this->getEditLink($this->getNextRecordID());
@@ -243,7 +245,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      * @param  Form $form The Form object
      * @return HTTPResponse
      */
-    public function doSaveAndPrev($data, $form)
+    public function doSaveAndPrev(array $data, $form)
     {
         Controller::curr()->getResponse()->addHeader("X-Pjax", "Content");
         $link = $this->getEditLink($this->getPreviousRecordID());
@@ -254,11 +256,10 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
     /**
      * Gets the edit link for a record
      * @param  int $id The ID of the record in the GridField
-     * @return string
      */
-    public function getEditLink($id)
+    public function getEditLink($id): string
     {
-        return Controller::join_links($this->owner->gridField->Link(), "item", $id);
+        return Controller::join_links($this->getOwner()->gridField->Link(), "item", $id);
     }
 
     /**
@@ -271,7 +272,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      */
     public function doNew($data, $form)
     {
-        return Controller::curr()->redirect($this->owner->Link('addnew'));
+        return Controller::curr()->redirect($this->getOwner()->Link('addnew'));
     }
 
     /**
@@ -284,24 +285,23 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
     {
         $origStage = Versioned::get_stage();
         Versioned::set_stage('Stage');
-        $action = $this->owner->doSave($data, $form);
+        $action = $this->getOwner()->doSave($data, $form);
         Versioned::set_stage($origStage);
 
         return $action;
     }
 
     /**
-     * @param  array       $data
      * @param  Form        $form
      * @param  HTTPRequest $request
      * @param  string      $redirectURL
      * @return HTMLText|HTTPResponse|ViewableData_Customised
      */
-    public function publish($data, $form, $request = null, $redirectURL = null)
+    public function publish(array $data, $form, $request = null, $redirectURL = null)
     {
-        $new_record = $this->owner->record->ID == 0;
+        $new_record = $this->getOwner()->record->ID == 0;
         $controller = Controller::curr();
-        $list = $this->owner->gridField->getList();
+        $list = $this->getOwner()->gridField->getList();
 
         if ($list instanceof ManyManyList) {
             // Data is escaped in ManyManyList->add()
@@ -310,33 +310,33 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
             $extraData = null;
         }
 
-        if (isset($data['ClassName']) && $data['ClassName'] != $this->owner->record->ClassName) {
+        if (isset($data['ClassName']) && $data['ClassName'] != $this->getOwner()->record->ClassName) {
             $newClassName = $data['ClassName'];
             // The records originally saved attribute was overwritten by $form->saveInto($record) before.
             // This is necessary for newClassInstance() to work as expected, and trigger change detection
             // on the ClassName attribute
-            $this->owner->record->setClassName($this->owner->record->ClassName);
+            $this->getOwner()->record->setClassName($this->getOwner()->record->ClassName);
             // Replace $record with a new instance
-            $this->owner->record = $this->owner->record->newClassInstance($newClassName);
+            $this->getOwner()->record = $this->getOwner()->record->newClassInstance($newClassName);
         }
 
-        if (!$this->owner->record->canEdit()) {
+        if (!$this->getOwner()->record->canEdit()) {
             return $controller->httpError(403);
         }
 
         try {
             $this->save($data, $form);
-            $list->add($this->owner->record, $extraData);
-            $this->owner->record->invokeWithExtensions('onBeforePublish', $this->owner->record);
-            $this->owner->record->publish('Stage', 'Live');
-            $this->owner->record->invokeWithExtensions('onAfterPublish', $this->owner->record);
-        } catch (ValidationException $e) {
-            $form->sessionMessage($e->getResult()->message(), 'bad');
+            $list->add($this->getOwner()->record, $extraData);
+            $this->getOwner()->record->invokeWithExtensions('onBeforePublish', $this->getOwner()->record);
+            $this->getOwner()->record->publish('Stage', 'Live');
+            $this->getOwner()->record->invokeWithExtensions('onAfterPublish', $this->getOwner()->record);
+        } catch (ValidationException $validationException) {
+            $form->sessionMessage($validationException->getResult()->message(), 'bad');
             $responseNegotiator = new PjaxResponseNegotiator(array(
-                'CurrentForm' => function () use (&$form) {
+                'CurrentForm' => function () use (&$form): string {
                     return $form->forTemplate();
                 },
-                'default'     => function () use (&$controller) {
+                'default'     => function () use (&$controller): HTTPResponse {
                     return $controller->redirectBack();
                 }
             ));
@@ -353,29 +353,29 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
             return $controller->redirect($redirectURL);
         }
 
-        $title = '"' . Convert::raw2xml($this->owner->record->Title) . '"';
+        $title = '"' . Convert::raw2xml($this->getOwner()->record->Title) . '"';
         $message = sprintf(
             'Published %s %s',
-            $this->owner->record->i18n_singular_name(),
+            $this->getOwner()->record->i18n_singular_name(),
             $title
         );
 
         $form->sessionMessage($message, 'good');
-
         if ($new_record) {
-            return Controller::curr()->redirect($this->owner->Link());
-        } elseif ($this->owner->gridField->getList()->byId($this->owner->record->ID)) {
+            return Controller::curr()->redirect($this->getOwner()->Link());
+        }
+
+        if ($this->getOwner()->gridField->getList()->byId($this->getOwner()->record->ID)) {
             // Return new view, as we can't do a "virtual redirect" via the CMS Ajax
             // to the same URL (it assumes that its content is already current, and doesn't reload)
-            return $this->owner->edit(Controller::curr()->getRequest());
-        } else {
-            // Changes to the record properties might've excluded the record from
-            // a filtered list, so return back to the main view if it can't be found
-            $noActionURL = $controller->removeAction($data['url']);
-            $controller->getRequest()->addHeader('X-Pjax', 'Content');
-
-            return $controller->redirect($noActionURL, 302);
+            return $this->getOwner()->edit(Controller::curr()->getRequest());
         }
+
+        // Changes to the record properties might've excluded the record from
+        // a filtered list, so return back to the main view if it can't be found
+        $noActionURL = $controller->removeAction($data['url']);
+        $controller->getRequest()->addHeader('X-Pjax', 'Content');
+        return $controller->redirect($noActionURL, 302);
     }
 
     /**
@@ -389,12 +389,12 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
         Versioned::set_stage('Live');
 
         // This way our ID won't be unset
-        $clone = clone $this->owner->record;
+        $clone = clone $this->getOwner()->record;
         $clone->delete();
 
         Versioned::set_stage($origStage);
 
-        return $this->owner->edit(Controller::curr()->getRequest());
+        return $this->getOwner()->edit(Controller::curr()->getRequest());
     }
 
     /**
@@ -404,13 +404,13 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      */
     public function rollback($data, $form)
     {
-        if (!$this->owner->record->canEdit()) {
+        if (!$this->getOwner()->record->canEdit()) {
             return Controller::curr()->httpError(403);
         }
 
-        $this->owner->record->doRollbackTo('Live');
+        $this->getOwner()->record->doRollbackTo('Live');
 
-        $this->owner->record = DataList::create($this->owner->record->class)->byID($this->owner->record->ID);
+        $this->getOwner()->record = DataList::create($this->getOwner()->record->class)->byID($this->getOwner()->record->ID);
 
         $message = _t(
             'CMSMain.ROLLEDBACKPUBv2',
@@ -419,7 +419,7 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
 
         $form->sessionMessage($message, 'good');
 
-        return $this->owner->edit(Controller::curr()->getRequest());
+        return $this->getOwner()->edit(Controller::curr()->getRequest());
     }
 
     /**
@@ -431,10 +431,11 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      */
     protected function getToplevelController()
     {
-        $c = $this->owner->getController();
+        $c = $this->getOwner()->getController();
         while ($c && $c instanceof GridFieldDetailForm_ItemRequest) {
             $c = $c->getController();
         }
+
         return $c;
     }
 
@@ -453,13 +454,14 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
         if ($toplevelController && $toplevelController instanceof LeftAndMain) {
             if ($toplevelController->hasMethod('Backlink')) {
                 $backlink = $toplevelController->Backlink();
-            } elseif ($this->owner->getController()->hasMethod('Breadcrumbs')) {
-                $parents = $this->owner->getController()->Breadcrumbs(false)->items;
+            } elseif ($this->getOwner()->getController()->hasMethod('Breadcrumbs')) {
+                $parents = $this->getOwner()->getController()->Breadcrumbs(false)->items;
                 $backlink = array_pop($parents)->Link;
             }
         }
+
         if (!$backlink) {
-            $backlink = $toplevelController->Link();
+            return $toplevelController->Link();
         }
 
         return $backlink;
@@ -475,11 +477,10 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      * @todo  GridFieldDetailForm_ItemRequest::doSave is too monolithic, making overloading impossible. Most
      *        of this code is a direct copy.
      * */
-    protected function saveAndRedirect($data, $form, $redirectLink)
+    protected function saveAndRedirect(array $data, $form, $redirectLink)
     {
-        $new_record = $this->owner->record->ID == 0;
         $controller = Controller::curr();
-        $list = $this->owner->gridField->getList();
+        $list = $this->getOwner()->gridField->getList();
 
         if ($list instanceof ManyManyList) {
             // Data is escaped in ManyManyList->add()
@@ -488,27 +489,28 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
             $extraData = null;
         }
 
-        if (!$this->owner->record->canEdit()) {
+        if (!$this->getOwner()->record->canEdit()) {
             return $controller->httpError(403);
         }
 
         try {
-            $form->saveInto($this->owner->record);
-            $this->owner->record->write();
-            $list->add($this->owner->record, $extraData);
-        } catch (ValidationException $e) {
-            $form->sessionMessage($e->getResult()->message(), 'bad');
+            $form->saveInto($this->getOwner()->record);
+            $this->getOwner()->record->write();
+            $list->add($this->getOwner()->record, $extraData);
+        } catch (ValidationException $validationException) {
+            $form->sessionMessage($validationException->getResult()->message(), 'bad');
             $responseNegotiator = new PjaxResponseNegotiator(array(
                 'CurrentForm' => function () use ($form) {
                     return $form->forTemplate();
                 },
-                'default' => function () use ($controller) {
+                'default' => function () use ($controller): HTTPResponse {
                     return $controller->redirectBack();
                 }
             ));
             if ($controller->getRequest()->isAjax()) {
                 $controller->getRequest()->addHeader('X-Pjax', 'CurrentForm');
             }
+
             return $responseNegotiator->respond($controller->getRequest());
         }
 
@@ -525,8 +527,8 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      */
     public function getPreviousRecordID()
     {
-        $map = $this->owner->gridField->getManipulatedList()->limit(PHP_INT_MAX, 0)->column('ID');
-        $offset = array_search($this->owner->record->ID, $map);
+        $map = $this->getOwner()->gridField->getManipulatedList()->limit(PHP_INT_MAX, 0)->column('ID');
+        $offset = array_search($this->getOwner()->record->ID, $map, true);
         return isset($map[$offset-1]) ? $map[$offset-1] : false;
     }
 
@@ -540,10 +542,10 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      */
     public function getNextRecordID()
     {
-        $map = $this->owner->gridField->getManipulatedList()->limit(PHP_INT_MAX, 0)->column('ID');
+        $map = $this->getOwner()->gridField->getManipulatedList()->limit(PHP_INT_MAX, 0)->column('ID');
         // If there are a million results and they were paginated, this is going to be slow now
         // TODO: Search in the paginated list only somehow (grab the limit + offset and search from there?)
-        $offset = array_search($this->owner->record->ID, $map);
+        $offset = array_search($this->getOwner()->record->ID, $map, true);
         return isset($map[$offset+1]) ? $map[$offset+1] : false;
     }
 
@@ -553,18 +555,18 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
      */
     public function recordIsPublished()
     {
-        if (!$this->owner->record->checkVersioned()) {
+        if (!$this->getOwner()->record->checkVersioned()) {
             return false;
         }
 
-        if (!$this->owner->record->isInDB()) {
+        if (!$this->getOwner()->record->isInDB()) {
             return false;
         }
 
-        $baseClass = DataObject::getSchema()->baseDataClass($this->owner->record);
+        $baseClass = DataObject::getSchema()->baseDataClass($this->getOwner()->record);
         $stageTable = DataObject::getSchema()->tableName($baseClass) . '_Live';
 
-        return (bool) DB::query("SELECT \"ID\" FROM \"{$stageTable}\" WHERE \"ID\" = {$this->owner->record->ID}")
+        return (bool) DB::query(sprintf('SELECT "ID" FROM "%s" WHERE "ID" = %s', $stageTable, $this->getOwner()->record->ID))
             ->value();
     }
 
@@ -575,21 +577,21 @@ class GridFieldBetterButtonsItemRequest extends DataExtension
     public function recordIsDeletedFromStage()
     {
         // for SiteTree records
-        if ($this->owner->hasMethod('getIsDeletedFromStage')) {
-            return $this->owner->IsDeletedFromStage;
+        if ($this->getOwner()->hasMethod('getIsDeletedFromStage')) {
+            return $this->getOwner()->IsDeletedFromStage;
         }
 
-        if (!$this->owner->record->checkVersioned()) {
+        if (!$this->getOwner()->record->checkVersioned()) {
             return false;
         }
 
-        if (!$this->owner->record->isInDB()) {
+        if (!$this->getOwner()->record->isInDB()) {
             return true;
         }
 
-        $class = $this->owner->record->class;
+        $class = $this->getOwner()->record->class;
 
-        $stageVersion = Versioned::get_versionnumber_by_stage($class, 'Stage', $this->owner->record->ID);
+        $stageVersion = Versioned::get_versionnumber_by_stage($class, 'Stage', $this->getOwner()->record->ID);
 
         // Return true for both completely deleted pages and for pages just deleted from stage
         return !($stageVersion);

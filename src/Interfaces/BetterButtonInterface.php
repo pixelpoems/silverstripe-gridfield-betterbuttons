@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Interfaces;
 
 use SilverStripe\Forms\Form;
@@ -21,8 +23,6 @@ interface BetterButtonInterface
 
     /**
      * Binds the action to a GridField edit page
-     * @param  Form $form
-     * @param  GridFieldDetailForm_ItemRequest $request
      */
     public function bindGridField(Form $form, GridFieldDetailForm_ItemRequest $request);
 }

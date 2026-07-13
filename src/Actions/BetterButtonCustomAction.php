@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Actions;
 
 use Exception;
@@ -11,6 +13,7 @@ use UncleCheese\BetterButtons\Actions\BetterButtonAction;
  *
  * @author  Uncle Cheese <unclecheese@leftandmain.com>
  * @package  silverstripe-gridfield-better-buttons
+ * @see \UncleCheese\BetterButtons\Tests\Actions\BetterButtonCustomActionTest
  */
 class BetterButtonCustomAction extends BetterButtonAction
 {
@@ -63,7 +66,7 @@ class BetterButtonCustomAction extends BetterButtonAction
      *
      * @return string
      */
-    public function getButtonName()
+    public function getButtonName(): ?string
     {
         return $this->actionName;
     }
@@ -75,7 +78,7 @@ class BetterButtonCustomAction extends BetterButtonAction
      * @param int $type
      * @throws Exception if the redirect type is not supported
      */
-    public function setRedirectType($type)
+    public function setRedirectType($type): static
     {
         if (!in_array($type, array(self::GOBACK, self::REFRESH))) {
             throw new Exception(
@@ -102,7 +105,7 @@ class BetterButtonCustomAction extends BetterButtonAction
      *
      * @param string $url
      */
-    public function setRedirectURL($url)
+    public function setRedirectURL($url): static
     {
         $this->redirectURL = $url;
 

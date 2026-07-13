@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Buttons;
 
 use SilverStripe\Forms\Form;
@@ -16,7 +18,7 @@ use UncleCheese\BetterButtons\Interfaces\BetterButtonInterface;
  */
 abstract class BetterButton extends FormAction implements BetterButtonInterface
 {
-    private static $extensions = array (
+    private static array $extensions = array (
         BetterButtonGroupable::class
     );
 
@@ -28,8 +30,6 @@ abstract class BetterButton extends FormAction implements BetterButtonInterface
 
     /**
      * Bind to the GridField request
-     * @param Form $form
-     * @param GridFieldDetailForm_ItemRequest $request
      */
     public function bindGridField(Form $form, GridFieldDetailForm_ItemRequest $request)
     {

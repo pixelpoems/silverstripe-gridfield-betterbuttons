@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Actions;
 
 use SilverStripe\Forms\FieldList;
-use UncleCheese\BetterButtons\Actions\BetterButtonAction;
 
 /**
  * Defines a button that launches a nested form
@@ -13,16 +14,12 @@ use UncleCheese\BetterButtons\Actions\BetterButtonAction;
  */
 class BetterButtonNestedForm extends BetterButtonCustomAction
 {
-    /**
-     * @var FieldList
-     */
-    protected $fields;
+    protected FieldList $fields;
 
     /**
      * Builds the button
      * @param string    $actionName The name of the action (method)
      * @param string    $text       The text for the button
-     * @param FieldList $fields
      */
     public function __construct($actionName, $text, FieldList $fields)
     {
@@ -44,9 +41,8 @@ class BetterButtonNestedForm extends BetterButtonCustomAction
 
     /**
      * Gets the field list
-     * @return FieldList
      */
-    public function getFields()
+    public function getFields(): FieldList
     {
         return $this->fields;
     }

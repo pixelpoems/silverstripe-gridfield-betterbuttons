@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace UncleCheese\BetterButtons\Buttons;
 
 use UncleCheese\BetterButtons\Buttons\BetterButton;
@@ -22,9 +24,8 @@ class BetterButton_SaveAndAdd extends BetterButton
 
     /**
      * Determines if the record should show
-     * @return boolean
      */
-    public function shouldDisplay()
+    public function shouldDisplay(): bool
     {
         $record = $this->gridFieldRequest->record;
 
