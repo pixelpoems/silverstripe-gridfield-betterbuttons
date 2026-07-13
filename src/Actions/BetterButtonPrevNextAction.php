@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace UncleCheese\BetterButtons\Actions;
 
 use SilverStripe\Control\Controller;
-use UncleCheese\BetterButtons\Actions\BetterButtonAction;
 
 /**
  * Defines a set of buttons that offers prev/next navigation from within a
@@ -17,9 +16,9 @@ use UncleCheese\BetterButtons\Actions\BetterButtonAction;
 class BetterButtonPrevNextAction extends BetterButtonAction
 {
     /**
-   * Gets the HTML for the button
-   */
-  public function getButtonHTML(): string
+     * Gets the HTML for the button
+     */
+    public function getButtonHTML(): string
     {
         $html = '<div class="btn-group" role="group">';
 
@@ -39,7 +38,7 @@ class BetterButtonPrevNextAction extends BetterButtonAction
         $linkText = $previousRecordID ? _t('GridFieldBetterButtons.PREVIOUS', 'Previous') : "";
 
         $html .= sprintf(
-            "<a class='ss-ui-button btn btn-default gridfield-better-buttons-prevnext gridfield-better-buttons-prev %s' href='%s' title='%s'><img src='_resources/".BETTER_BUTTONS_DIR."/images/prev.png' alt='previous'  /> %s</a>",
+            "<a class='ss-ui-button btn btn-default gridfield-better-buttons-prevnext gridfield-better-buttons-prev %s' href='%s' title='%s'><img src='".BETTER_BUTTONS_DIR."/images/prev.png' alt='previous'  /> %s</a>",
             $cssClass,
             $prevLink,
             $linkTitle,
@@ -56,7 +55,7 @@ class BetterButtonPrevNextAction extends BetterButtonAction
 
 
         $html .= sprintf(
-            "<a class='ss-ui-button btn btn-default gridfield-better-buttons-prevnext gridfield-better-buttons-next %s' href='%s' title='%s'>%s <img src='_resources/".BETTER_BUTTONS_DIR."/images/next.png' alt='next'  /></a>",
+            "<a class='ss-ui-button btn btn-default gridfield-better-buttons-prevnext gridfield-better-buttons-next %s' href='%s' title='%s'>%s <img src='".BETTER_BUTTONS_DIR."/images/next.png' alt='next'  /></a>",
             $cssClass,
             $nextLink,
             $linkTitle,
